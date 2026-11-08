@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thumbnail Studio Pro</title>
+<style>
+:root{--bg:#0b1020;--panel:#151d33;--line:#293653;--txt:#f5f7ff;--muted:#aab5ce;--accent:#8b5cf6;--accent2:#06b6d4}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#1d2850,#0b1020 55%);color:var(--txt);font:15px system-ui,Arial,sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:22px}.hero{padding:24px 0 16px}.tag{color:#a5b4fc;font-weight:700;letter-spacing:.12em;font-size:12px}.hero h1{font-size:clamp(28px,5vw,46px);margin:8px 0}.hero p{color:var(--muted);margin:0}
+.owner{margin-top:14px;color:#d7def1;font-size:13px}.panel{background:#151d33eF;border:1px solid var(--line);border-radius:18px;padding:18px;margin:16px 0;box-shadow:0 12px 35px #0004}
+h2{font-size:18px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{display:block;color:#c6d0e6;font-size:13px;margin-bottom:6px}input,select,button{width:100%;border-radius:11px;border:1px solid #3a496a;padding:12px;background:#0e162a;color:white;font:inherit}
+button{background:linear-gradient(110deg,var(--accent),#5865f2);border:0;font-weight:700;cursor:pointer;margin-top:8px}button.secondary{background:#263451;border:1px solid #465778}button:disabled{opacity:.5;cursor:wait}
+small,.hint{color:var(--muted);line-height:1.5}.status{margin-top:10px;color:#a5f3fc;min-height:22px}.videos{display:grid;gap:8px;margin-top:12px}.video{padding:11px;border:1px solid var(--line);border-radius:10px;background:#10192d;cursor:pointer}.video:hover{border-color:#9b8afb}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.thumb{background:#0d1426;border:1px solid var(--line);border-radius:14px;overflow:hidden}.thumb canvas{width:100%;display:block;aspect-ratio:16/9}.thumb .meta{padding:10px}.thumb .meta button{padding:9px;margin-top:6px}.foot{color:var(--muted);font-size:12px;text-align:center;padding:25px 0}
+</style></head>
+<body><main class="wrap">
+<header class="hero"><div class="tag">CREATOR TOOLKIT</div><h1>Thumbnail Studio Pro</h1><p>Build polished YouTube thumbnail concepts from your video title.</p><div class="owner">Created by <b>Md.Ashik Raj</b> · 01779814163</div></header>
+<section class="panel">
+<h2>1. Find videos from your channel</h2>
+<div class="grid"><div><label for="channel">YouTube channel URL or @handle</label><input id="channel" placeholder="https://www.youtube.com/@yourchannel"></div><div style="align-self:end"><button id="load">Load channel videos</button></div></div>
+<div class="status" id="channelStatus"></div><div class="videos" id="videos"></div>
+<p class="hint">If the channel lookup does not find your channel, paste a video title in the next section manually.</p>
+</section>
+<section class="panel">
+<h2>2. Create thumbnail concepts</h2>
+<div class="grid">
+<div><label for="title">Video title / topic</label><input id="title" placeholder="Enter your YouTube video title"></div>
+<div><label for="lang">Thumbnail text language</label><select id="lang"><option>English</option><option>বাংলা</option><option>हिन्दी</option><option>العربية</option><option>اردو</option><option>Español</option><option>Français</option><option>Português</option><option>Deutsch</option><option>日本語</option><option>中文</option></select></div>
+<div><label for="count">Number of concepts</label><select id="count"><option value="10">10 concepts</option><option value="20">20 concepts</option></select></div>
+</div>
+<button id="make">Find images & create concepts</button><div class="status" id="makeStatus"></div>
+<p class="hint">Images are relevant stock-photo search results from Pixabay, not newly AI-generated artwork. Layouts and text are varied automatically.</p>
+</section>
+<section class="panel"><h2>3. My Creations</h2><p class="hint">Saved in this browser on this device. Browser storage can be cleared and does not sync to other devices.</p><div class="gallery" id="gallery"></div></section>
+<div class="foot">Thumbnail Studio Pro · 1280 × 720 PNG · Use images only in accordance with their license.</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let imageResults=[];
+function cleanTitle(s){return (s||'').trim().replace(/\s+/g,' ')}
+$('load').onclick=async()=>{const channel=$('channel').value.trim();if(!channel){$('channelStatus').textContent='Enter a channel URL or @handle first.';return}
+$('load').disabled=true;$('channelStatus').textContent='Loading channel videos…';$('videos').innerHTML='';
+try{const r=await fetch('/api/channel?url='+encodeURIComponent(channel));const d=await r.json();if(!r.ok)throw Error(d.error||'Could not load channel');$('channelStatus').textContent=`Found ${d.items.length} videos from ${d.channelTitle||'your channel'}.`;d.items.forEach(v=>{const el=document.createElement('div');el.className='video';el.textContent=v.title;el.onclick=()=>$('title').value=v.title;$('videos').appendChild(el)})}catch(e){$('channelStatus').textContent=e.message}finally{$('load').disabled=false}};
+function draw(canvas,img,title,n,lang){const c=canvas.getContext('2d'),w=1280,h=720;c.clearRect(0,0,w,h);if(img){c.drawImage(img,0,0,w,h)}else{const g=c.createLinearGradient(0,0,w,h);g.addColorStop(0,'#172554');g.addColorStop(1,'#7c3aed');c.fillStyle=g;c.fillRect(0,0,w,h)}
+c.fillStyle='rgba(4,8,20,.56)';c.fillRect(0,0,w,h);const palettes=[['#facc15','#ef4444'],['#67e8f9','#7c3aed'],['#fb7185','#f97316'],['#86efac','#2563eb'],['#f5f5f4','#db2777']];const p=palettes[n%palettes.length];
+c.fillStyle=p[0];c.fillRect(54,58,16,604);c.textAlign='left';c.shadowColor='#000';c.shadowBlur=18;c.fillStyle='#fff';c.font='900 72px Arial';let words=title.split(' '),lines=[],line='';for(const word of words){if((line+' '+word).trim().length>24){lines.push(line);line=word}else line=(line+' '+word).trim()}if(line)lines.push(line);lines=lines.slice(0,4);let y=260-(lines.length-1)*48;lines.forEach((t,i)=>{c.fillStyle=i===0?p[0]:'#fff';c.font=`900 ${i===0?86:72}px Arial`;c.fillText(t.toUpperCase(),100,y);y+=90});c.shadowBlur=0;c.fillStyle=p[1];c.fillRect(100,600,330,58);c.fillStyle='#fff';c.font='bold 30px Arial';c.fillText('WATCH NOW',122,640);c.fillStyle='rgba(255,255,255,.9)';c.font='bold 24px Arial';c.textAlign='right';c.fillText('THUMBNAIL CONCEPT '+(n+1),1210,680)}
+async function loadImage(url){return new Promise((resolve,reject)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>resolve(im);im.onerror=reject;im.src=url})}
+$('make').onclick=async()=>{const title=cleanTitle($('title').value);if(!title){$('makeStatus').textContent='Enter a video title first.';return}
+$('make').disabled=true;$('makeStatus').textContent='Searching for relevant photos…';$('gallery').innerHTML='';
+try{const r=await fetch('/api/images?q='+encodeURIComponent(title));const d=await r.json();if(!r.ok)throw Error(d.error||'Image search failed');if(!d.items.length)throw Error('No matching images found. Try a shorter title.');imageResults=d.items;const count=Number($('count').value),lang=$('lang').value;let saved=[];
+for(let i=0;i<count;i++){const item=d.items[i%d.items.length];const img=await loadImage(item.largeImageURL);const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;draw(canvas,img,title,i,lang);const card=document.createElement('div');card.className='thumb';card.appendChild(canvas);const meta=document.createElement('div');meta.className='meta';const p=document.createElement('small');p.textContent=`Concept ${i+1} · ${item.tags||'Pixabay photo'}`;meta.appendChild(p);const btn=document.createElement('button');btn.textContent='Download PNG';btn.onclick=()=>{const a=document.createElement('a');a.download=`thumbnail-${i+1}.png`;a.href=canvas.toDataURL('image/png');a.click()};meta.appendChild(btn);card.appendChild(meta);$('gallery').appendChild(card);saved.push({title,lang,index:i,data:canvas.toDataURL('image/png')})}
+try{const old=JSON.parse(localStorage.getItem('tsp_gallery')||'[]');localStorage.setItem('tsp_gallery',JSON.stringify(saved.concat(old).slice(0,30)))}catch(e){}
+$('makeStatus').textContent=`Created ${count} thumbnail concepts. Download each PNG below.`}catch(e){$('makeStatus').textContent=e.message}finally{$('make').disabled=false}};
+</script></body></html>
